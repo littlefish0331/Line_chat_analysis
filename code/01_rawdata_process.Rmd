@@ -1,0 +1,49 @@
+---
+title: "Untitled"
+author: "Steve, Yu"
+date: "2020/5/11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls()); gc()
+library(dplyr)
+library(data.table)
+library(lubridate)
+library(knitr)
+opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+tmp01 <- readLines("D:/My_Honey/LINE紀錄/[LINE] 與佑佑的聊天_20200506.txt", encoding = "UTF-8")
+tmp01 %>% head
+tmp02 <- tmp01[-c(1:3)]
+```
+
+```{r}
+tmp02 <- tmp02 %>% 
+  gsub(pattern = "(\\t)+", "\t", .) %>% 
+  gsub(pattern = "(\\t)$", "", .) %>% 
+  gsub(pattern = "\\t5", "", .)
+  
+# tmp02[87880:87890] %>% gsub(pattern = "(\\t)$", "-", .)
+library(stringr)
+tmp02 %>% str_count(string = ., pattern = "\\t") %>% table
+t1 <- tmp02 %>% str_count(string = ., pattern = "\\t")
+which(t1>2)
+tmp02[87890:87900]
+tmp02[87890:87900] %>% cat
+tmp02[87893]
+tmp02[87893] %>% cat
+tmp02[87893] %>% gsub("\\t", "-", .)
+tmp02[87893] %>% gsub("", "-", ., perl = T)
+# 
+
+
+```
+
+You unsent a message.
+
+---
+
+# END
