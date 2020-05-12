@@ -110,15 +110,36 @@ step4. 選擇要匯出聊天紀錄的位置。
 ## 分析方式、流程、輸出
 
 原始資料為 raw.txt
-先整理成一筆為一次訊息，格式為raw.csv [timestamp, user, context]  
+先整理成一筆為一次訊息，格式為raw.csv [timestamp, user, context, emoji]  
 之後的每一筆資料都從這出發。  
 PK = all(timestamp + user + context)。
 
 - timestamp: yyyy-mm-ddThh:mm，24hrs制。
 - user: 保持資料原本的使用者名稱。
 - context:
-  - 多行訊息要變回一行，並用\n分隔。
+  - 多行訊息要變回一行，並用\n分隔。(是同一個訊息框，但為多行這樣。)
   - 收回訊息要轉變回正常格式。
+- emoji: 表情符號的十六進位表示。
+
+### 流程
+
+- 讀取資料 chat_rawdata
+- 匯出標頭
+  - 檔案名稱(聊天室名稱): chat_filename
+  - 備分時間: chatfilebackuptime
+  - 使用者名稱 chat_user
+- 資料清理01 chat_tmp01: 補齊\t
+  - 正確格式: 時間\t使用者名稱\t內容，但有時候會少掉第二個\t，所以要補上。
+  - 收回訊息也會少掉一個\t，要補上。「您已收回訊息」、「You unsent a message.」
+- 資料清理02: 把每一天的訊息，放入list中
+- 資料清理03: 同一個訊息框的資訊合併
+  - 用"抓出index，兩兩index之間的訊息就是要用\n合併的。
+  - 將每一天的日期補在最前面。
+- 資料清理04: 切開資料by\t，分成 [timestamp, user, context]
+- 資料清理05 chat_tmp02: 清理context的\t。正常只會有兩個\t，中間夾著使用者名稱。
+  - 兩個以上的\t變成一個\t
+  - 句尾的\t移除
+  - \t5這種詭異符號移除
 
 ---
 
