@@ -147,11 +147,19 @@ PK = all(timestamp + user + context)。
 - 資料清理05 chat_tmp05: 移除收回訊息的動作紀錄。因為不知道是誰收回，無法從上傳者做判斷。
   - 關鍵字: 「您已收回訊息」、「You unsent a message.」
   - 因為使用者名稱在收回訊息時，會和聊天時的名稱不同，所以才無法清理。
-  - 會少\t，所以先移除。這些存放在chat_unsend
+  - 會少\t，所以先移除。這些存放在 chat_unsend
 
-- 資料清理06: 切開資料by\t，分成 [t_date, t_time, user, context]
+- 資料清理06 chat_tmp06: 移除有關相簿的動作紀錄。
+  - 關鍵字: 「changed the name of the album」、「刪除了.*相簿內的照片」、「已將相簿名稱由.*改為」
+  - 因為使用者名稱在刪除相簿照片或是更改相簿名稱時，會和聊天時的名稱不同，所以才無法清理。
+  - 會少\t，所以先移除。這些存放在 chat_albumaction_rename_rm
 
-- 資料清理05: 清理context的\t。正常只會有兩個\t，中間夾著使用者名稱。
+
+
+
+- 資料清理07: 切開資料by\t，分成 [t_date, t_time, user, context]
+
+- 資料清理08: 清理context的\t。正常只會有兩個\t，中間夾著使用者名稱。
   - 兩個以上的\t變成一個\t
   - 句尾的\t移除
   - \t5這種詭異符號移除

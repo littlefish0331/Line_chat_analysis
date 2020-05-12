@@ -114,17 +114,21 @@ chat_unsend <- chat_tmp04[c(rm_chat_idx01, rm_chat_idx02), ]
 chat_tmp05 <- chat_tmp04[-c(rm_chat_idx01, rm_chat_idx02), ]
 ```
 
-## 資料清理06: 切開資料by\t，分成 [t_date, t_time, user, context]
+## 資料清理06 chat_tmp06: 移除有關相簿的動作紀錄。
 
-
-
-
-
-
-
-
+- 關鍵字: 「changed the name of the album」、「刪除了.*相簿內的照片」、「已將相簿名稱由.*改為」
+- 因為使用者名稱在刪除相簿照片或是更改相簿名稱時，會和聊天時的名稱不同，所以才無法清理。
+- 會少\t，所以先移除。這些存放在chat_albumaction_rename_rm
+  
 ```{r}
-
+rm_chat_idx01 <- chat_tmp05$rawdata %>% 
+  grepl("changed the name of the album", .) %>% which()
+rm_chat_idx02 <- chat_tmp05$rawdata %>% 
+  grepl("刪除了.*相簿內的照片", .) %>% which()
+rm_chat_idx03 <- chat_tmp05$rawdata %>% 
+  grepl("已將相簿名稱由.*改為", .) %>% which()
+chat_albumaction_rename_rm <- chat_tmp05[c(rm_chat_idx01, rm_chat_idx02, rm_chat_idx03), ]
+chat_tmp06 <- chat_tmp05[-c(rm_chat_idx01, rm_chat_idx02, rm_chat_idx03), ]
 ```
 
 
@@ -133,80 +137,36 @@ chat_tmp05 <- chat_tmp04[-c(rm_chat_idx01, rm_chat_idx02), ]
 
 
 
-```{r}
-chat_tmp01 %>% head
-chat_tmp01 %>% head %>% gregexpr("\\t", text = .)
-```
 
-## 資料清理05 chat_tmp02: 清理context的\t。正常只會有兩個\t，中間夾著使用者名稱。
+
+## 資料清理07: 切開資料by\t，分成 [t_date, t_time, user, context]
 
 ```{r}
-# chat_tmp02 <- chat_tmp01 %>% 
-#   gsub(pattern = "(\\t){2,}", "\t ", .) %>% 
-#   gsub(pattern = "(\\t)$", "", .) %>% 
-#   gsub(pattern = "\\t5", "", .)
+# t1 <- chat_tmp06$rawdata %>% gregexpr("\\t", .) %>% lengths
+library(rematch2)
+pp1 <- "(?<t_time>(上午|下午)[0-9]{2}:[0-9]{2})\\t(?<user>[^\\t]*)\\t(?<content>[^\\\\]*)"
+pp1 <- "(?<t_time>(上午|下午)[0-9]{2}:[0-9]{2})\\t(?<user>[^\\t]*)\\t(?<content>.*)"
+tmp <- re_match(chat_tmp06$rawdata, pattern = pp1)
+tmp[7,] %>% View()
+
+t1 <- (tmp$.text==tmp$.match)
+t1 %>% table
+t2 <- which(t1==FALSE)
+tmp[t2, ] %>% View()
+chat_tmp06$rawdata[t2] %>% View()
+
+
+pp2 <- "(下午|上午)[0-9]{2}:[0-9]{2}\\t[^\\t]*\\t"
+chat_tmp06$rawdata[7] %>% gsub(pp2, "-", .)
+re_match(text = dates, pattern = isodaten)
+
+t1 %>% table
 ```
 
-```{r}
-# tmp02[87880:87890] %>% gsub(pattern = "(\\t)$", "-", .)
-library(stringr)
-
-chat_tmp02 %>% str_count(string = ., pattern = "\\t") %>% table
-t1 <- chat_tmp02 %>% str_count(string = ., pattern = "\\t")
-which(t1>2)
-chat_tmp02[55053]
-chat_tmp02[87893]
 
 
-chat_tmp01[12060:12065]
-tmp02[87890:87900]
-tmp02[87890:87900] %>% View()
-# 
-tmp02[87890:87900]
-tmp02[87890:87900] %>% grepl('\\"', .) %>% which()
-tmp02[87890:87900][4:6]
-tmp02[87890:87900][4:6] %>% paste(., collapse = "\n") %>% cat
-#
-
-```
-
-You unsent a message.
 
 ---
 
 # END
-
-資料清理02 chat_tmp02: 同一個訊息框的資訊合併
-
-```{r}
-# 檢查 " 的個數。
-countquote <- function(rawdata){
-  t1 <- rawdata %>% gregexpr('\\"', .) %>% unlist()
-  t2 <- t1[t1!=-1]
-  res <- length(t2)
-}
-t1 <- chat_tmp01 %>% sapply(., countquote, USE.NAMES = F)
-t1 %>% table
-t2 <- (t1==8) %>% which()
-chat_tmp01[1:6] %>% View()
-```
-
-```{r}
-idx <- chat_tmp01 %>% grepl('\\"', .) %>% which()
-idx_odd <- idx[seq(from = 1, to = length(idx), by = 2)]
-idx_even <- idx[seq(from = 2, to = length(idx), by = 2)]
-
-# ---
-chat_tmp02 <- data.table(raw = chat_tmp01)
-chat_tmp02[, `:=`(tmp02_group = seq_len(104729))]
-t1 <- mapply(`:`, idx_odd+1, idx_even, USE.NAMES = F) %>% unlist()
-chat_tmp02$tmp02_group[t1] <- 0
-chat_tmp02$tmp02_group <- chat_tmp02$tmp02_group %>% cumsum()
-
-# ---
-chat_tmp02 <- chat_tmp02[, .(raw_paste = paste(raw, collapse = "\n")), 
-                         by = .(tmp02_group)][, raw_paste]
-chat_tmp02 %>% head
-
-```
 
